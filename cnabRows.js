@@ -3,10 +3,6 @@ import path from 'path'
 import { readFile } from 'fs/promises'
 import { fileURLToPath } from 'url';
 
-// 1. Leitura de Arquivo CNAB:
-//
-//   Permitir que o usuário forneça o caminho do arquivo CNAB pela linha de comando (CLI).
-//   O campo do arquivo é opcional; caso não seja especificado, o programa deve informar ao usuário que será utilizado um arquivo padrão.
 // 2. Busca por Segmentos:
 //
 //   Implementar a capacidade de buscar por segmentos específicos no arquivo CNAB.
@@ -34,22 +30,23 @@ const optionsYargs = yargs(process.argv.slice(2))
   .option("f", { alias: "from", describe: "posição inicial de pesquisa da linha do Cnab", type: "number", demandOption: true })
   .option("t", { alias: "to", describe: "posição final de pesquisa da linha do Cnab", type: "number", demandOption: true })
   .option("s", { alias: "segmento", describe: "tipo de segmento", type: "string", demandOption: true })
-  .option("f", { alias: "file", describe: "path do arquivo", type: "string", demandOption: false })
+  .option("c", { alias: "caminho", describe: "caminho do arquivo", type: "string", demandOption: false })
   .example('$0 -f 21 -t 34 -s p', 'lista a linha e campo que from e to do cnab')
   .argv;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const { from, to, segmento, file } = optionsYargs
+const { from, to, segmento, caminho } = optionsYargs
 
 const defaultFilePath = `${__dirname}/cnabExample.rem`
-const filePath = path.resolve( file ?? defaultFilePath)
+const filePath = path.resolve( caminho ?? defaultFilePath)
 // IS VALID ?
 
 const sliceArrayPosition = (arr, ...positions) => [...arr].slice(...positions)
 
-const messageLog = (segmento, segmentoType, from, to) => `
+const messageLog = (segmento, segmentoType, from, to, caminho) => `
+${!caminho ? `Um arquivo padrão será utilizado.` : ''}
 ----- Cnab linha ${segmentoType} -----
 
 posição from: ${chalk.inverse.bgBlack(from)}
@@ -68,7 +65,7 @@ const log = console.log
 
 console.time('leitura Async')
 
-readFile(file, 'utf8')
+readFile(filePath, 'utf8')
   .then(file => {
     const cnabArray = file.split('\n')
 
@@ -79,17 +76,17 @@ readFile(file, 'utf8')
     const cnabTail = sliceArrayPosition(cnabArray, -2)
 
     if (segmento === 'p') {
-      log(messageLog(cnabBodySegmentoP, 'P', from, to))
+      log(messageLog(cnabBodySegmentoP, 'P', from, to, caminho))
       return
     }
 
     if (segmento === 'q') {
-      log(messageLog(cnabBodySegmentoQ, 'Q', from, to))
+      log(messageLog(cnabBodySegmentoQ, 'Q', from, to, caminho))
       return
     }
 
     if (segmento === 'r') {
-      log(messageLog(cnabBodySegmentoR, 'R', from, to))
+      log(messageLog(cnabBodySegmentoR, 'R', from, to, caminho))
       return
     }
 
